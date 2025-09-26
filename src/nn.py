@@ -38,6 +38,7 @@ class Neuron:
         arr1 = np.array(self.weights)
         self.input = np.dot(arr0, arr1)
         self.output = ACTIVATIONS["sigmoid"]["func"](self.input)
+        return self.output
     
 
 class Layer:
@@ -46,8 +47,10 @@ class Layer:
         self.neurons = [Neuron(prevNeuronSize) for i in range(neuronSize)]
 
     def forward(self, inputs):
-        for neuron in self.neurons:
-            neuron.forward(inputs)
+        outputs = list()
+        [outputs.append(neuron.forward(inputs)) for neuron in self.neurons]
+        return outputs
+            
 
 
 class General:
@@ -61,11 +64,13 @@ class General:
             self.layers.append(Layer(layerSize, layerSizes[i-1]))
     
     def forward(self):
+        outputs = self.inputs
         for i, layer in enumerate(self.layers):
             if i == 0:
-                layer.forward(self.inputs)
+                #layer.forward(self.inputs)
+                outputs = layer.forward(outputs)
                 continue
-            prev_outputs = [neuron.output for neuron in self.layers[i - 1].neurons]
-            layer.forward(prev_outputs)
-        
+            #prev_outputs = [neuron.output for neuron in self.layers[i - 1].neurons]
+            #layer.forward(prev_outputs)
+            outputs = layer.forward(outputs)
         [print(neuron.output) for neuron in self.layers[len(self.layers)-1].neurons]
