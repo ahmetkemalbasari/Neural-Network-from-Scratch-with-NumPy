@@ -73,4 +73,5 @@ class General:
             #prev_outputs = [neuron.output for neuron in self.layers[i - 1].neurons]
             #layer.forward(prev_outputs)
             outputs = layer.forward(outputs)
-        [print(neuron.output) for neuron in self.layers[len(self.layers)-1].neurons]
+        #[print(neuron.output) for neuron in self.layers[len(self.layers)-1].neurons]
+        print(outputs)
