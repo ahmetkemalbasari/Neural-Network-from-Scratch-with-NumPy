@@ -47,31 +47,20 @@ class Layer:
         self.neurons = [Neuron(prevNeuronSize) for i in range(neuronSize)]
 
     def forward(self, inputs):
-        outputs = list()
-        [outputs.append(neuron.forward(inputs)) for neuron in self.neurons]
-        return outputs
+        return [neuron.forward(inputs) for neuron in self.neurons]
             
 
 
 class General:
 
-    def __init__(self, layerSizes, inputs): # [12, 8, 4, 2] 12 -> direkt 12 input, 8 -> gerçekten 8 tane neuron
+    def __init__(self, layerSizes): # [12, 8, 4, 2] 12 -> direkt 12 input, 8 -> gerçekten 8 tane neuron
         self.layers = list()
-        self.inputs = inputs
         for i, layerSize in enumerate(layerSizes):
             if i == 0:
                 continue
             self.layers.append(Layer(layerSize, layerSizes[i-1]))
     
-    def forward(self):
-        outputs = self.inputs
-        for i, layer in enumerate(self.layers):
-            if i == 0:
-                #layer.forward(self.inputs)
-                outputs = layer.forward(outputs)
-                continue
-            #prev_outputs = [neuron.output for neuron in self.layers[i - 1].neurons]
-            #layer.forward(prev_outputs)
-            outputs = layer.forward(outputs)
-        #[print(neuron.output) for neuron in self.layers[len(self.layers)-1].neurons]
-        print(outputs)
+    def forward(self, inputs):
+        for layer in self.layers:
+            inputs = layer.forward(inputs)
+        print(inputs)
