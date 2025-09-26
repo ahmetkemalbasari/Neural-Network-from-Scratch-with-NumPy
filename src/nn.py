@@ -33,38 +33,39 @@ class Neuron:
         self.output = 0
         self.weights = np.random.uniform(-0.1, 0.1, inputSize)
     
-    def forward(self):
-        return
-        
+    def forward(self, inputs):
+        arr0 = np.array(inputs)
+        arr1 = np.array(self.weights)
+        self.input = np.dot(arr0, arr1)
+        self.output = ACTIVATIONS["sigmoid"]["func"](self.input)
+    
 
 class Layer:
 
     def __init__(self, neuronSize, prevNeuronSize):
         self.neurons = [Neuron(prevNeuronSize) for i in range(neuronSize)]
 
-
     def forward(self, inputs):
         for neuron in self.neurons:
-            sum = 0
-            for i, input in enumerate(inputs):
-                sum += input * neuron.weights[i]
-            neuron.output = sum
-
-
-            
+            neuron.forward(inputs)
 
 
 class General:
 
     def __init__(self, layerSizes, inputs): # [12, 8, 4, 2] 12 -> direkt 12 input, 8 -> gerçekten 8 tane neuron
         self.layers = list()
+        self.inputs = inputs
         for i, layerSize in enumerate(layerSizes):
             if i == 0:
                 continue
-            self.layers(Layer(layerSize, layerSizes[i-1]))
+            self.layers.append(Layer(layerSize, layerSizes[i-1]))
     
     def forward(self):
         for i, layer in enumerate(self.layers):
-            layer.forward()
-
-            layer.forward()
+            if i == 0:
+                layer.forward(self.inputs)
+                continue
+            prev_outputs = [neuron.output for neuron in self.layers[i - 1].neurons]
+            layer.forward(prev_outputs)
+        
+        [print(neuron.output) for neuron in self.layers[len(self.layers)-1].neurons]
