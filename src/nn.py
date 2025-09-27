@@ -92,6 +92,17 @@ class General:
 
         return np.mean(error**2)
     
+    def train(self, X: np.ndarray, Y: np.ndarray, lr: float = 0.01) -> float:
+        nsamples = X.shape[0]
+
+        idx = np.random.permutation(nsamples)
+        Xs, Ys = X[idx], Y[idx]
+
+        total_loss = 0.0
+        for x, y in zip(Xs, Ys):
+            total_loss += self.backprop(x, y, lr)
+        return total_loss / nsamples
+    
     def save(self, path):
         params = {
             "layer_sizes": np.array(self.layer_sizes),
