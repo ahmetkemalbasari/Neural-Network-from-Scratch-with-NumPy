@@ -29,9 +29,10 @@ ACTIVATIONS = {
 
 class Neuron:
 
-    def __init__(self, input_size):
+    def __init__(self, input_size, activation):
         self._z = 0
         self._a = 0
+        self._act = ACTIVATIONS[activation]
         self._inputs: np.ndarray = None
         self.bias = np.random.uniform(-0.1, 0.1)
         self.weights = np.random.uniform(-0.1, 0.1, input_size)
@@ -39,11 +40,11 @@ class Neuron:
     def forward(self, inputs):
         self._inputs = inputs
         self._z = np.dot(self.weights, inputs) + self.bias
-        self._a = ACTIVATIONS["leakyrelu"]["func"](self._z)
+        self._a = self._act["func"](self._z)
         return self._a
 
     def backprop(self, grad, learning_rate):
-        delta = grad * ACTIVATIONS["leakyrelu"]["grad"](self._z, self._a)
+        delta = grad * self._act["grad"](self._z, self._a)
         n_grads = self.weights * delta 
 
         self.bias -= learning_rate * delta
@@ -53,9 +54,9 @@ class Neuron:
 
 class Layer:
 
-    def __init__(self, neuron_size, prev_neuron_size):
+    def __init__(self, neuron_size, prev_neuron_size, activation):
         self.prev_neuron_size = prev_neuron_size
-        self.neurons = [Neuron(prev_neuron_size) for i in range(neuron_size)]
+        self.neurons = [Neuron(prev_neuron_size, activation) for i in range(neuron_size)]
 
     def forward(self, inputs):
         return np.stack([neuron.forward(inputs) for neuron in self.neurons])
@@ -68,12 +69,13 @@ class Layer:
 
 class General:
 
-    def __init__(self, layer_sizes): # [12, 8, 4, 2] 12 -> direkt 12 input, 8 -> gerçekten 8 tane neuron
+    def __init__(self, layer_sizes, activations): # [12, 8, 4, 2] 12 -> direkt 12 input, 8 -> gerçekten 8 tane neuron
         self.layers: List[Layer] = []
-        for i, layer_size in enumerate(layer_sizes):
-            if i == 0:
-                continue
-            self.layers.append(Layer(layer_size, layer_sizes[i-1]))
+        self.layer_sizes = layer_sizes
+        self.activations = activations
+
+        for neuron_size, prev_neuron_size, act in zip(layer_sizes[1:], layer_sizes, activations):
+            self.layers.append(Layer(neuron_size, prev_neuron_size, act))
     
     def forward(self, inputs: np.ndarray):
         for layer in self.layers:
@@ -90,3 +92,33 @@ class General:
 
         return np.mean(error**2)
     
+    def save(self, path):
+        params = {
+            "layer_sizes": np.array(self.layer_sizes),
+            "activations": np.array(self.activations, dtype=object)
+        }
+        for l, layer in enumerate(self.layers):
+            W = np.stack([n.weights for n in layer.neurons])
+            b = np.stack([n.bias    for n in layer.neurons])
+            params[f"W{l}"] = W
+            params[f"b{l}"] = b
+
+        with open(path, "wb") as f:
+            np.savez(f, **params)
+
+    @classmethod
+    def load(cls, path):
+        with open(path, "rb") as f:
+            data = np.load(f, allow_pickle=True)
+
+            layer_sizes = data["layer_sizes"].tolist()
+            activations = data["activations"].tolist()
+
+            model = cls(layer_sizes=layer_sizes, activations=activations)
+            for i, l in enumerate(model.layers):
+                W = data[f"W{i}"]
+                b = data[f"b{i}"]
+                for neuron, w_vec, bias in zip(l.neurons, W, b):
+                    neuron.weights = w_vec.copy()
+                    neuron.bias    = float(bias)
+            return model
