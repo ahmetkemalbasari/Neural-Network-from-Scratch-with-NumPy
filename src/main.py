@@ -1,27 +1,16 @@
 import numpy as np
 from nn import General
-
-"""
-class a :
-    def __init__(self):
-        self.sayi = np.random.uniform(-0.1, 0.1)
-
-class b : 
-    def __init__(self, sayi):
-        self.sayilar = [a() for i in range(sayi)]
-
-class c :
-    def __init__(self, sayi):
-        self.bs = list()
-
-        for i in range(sayi):
-            self.bs.append(b(5))
-    
-    def my_print(self):
-        print(self.bs[0].sayilar[0].sayi)
-"""    
+from csv_read import load_csv_data
 
 if __name__ == "__main__":
-    inputs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    genel = General([12, 8, 4, 2])
-    genel.forward(inputs)
+    X, Y, _, _ = load_csv_data("data/score_test.csv")
+    nsamples = X.shape[0]
+
+    genel = General([4, 16, 12, 2])
+    for i in range(50):
+        total_loss = 0
+        idx = np.random.permutation(nsamples)
+        Xs, Ys = X[idx], Y[idx]
+        for x, y in zip(Xs, Ys):
+            total_loss += genel.backprop(x, y, 0.0001)
+        print(total_loss / nsamples)
