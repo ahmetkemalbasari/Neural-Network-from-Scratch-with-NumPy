@@ -33,19 +33,21 @@ class Neuron:
         self._z = 0
         self._a = 0
         self._inputs: np.ndarray = None
+        self.bias = np.random.uniform(-0.1, 0.1)
         self.weights = np.random.uniform(-0.1, 0.1, input_size)
     
     def forward(self, inputs):
         self._inputs = inputs
-        self._z = np.dot(inputs, self.weights)
-        self._a = ACTIVATIONS["sigmoid"]["func"](self._z)
+        self._z = np.dot(self.weights, inputs) + self.bias
+        self._a = ACTIVATIONS["leakyrelu"]["func"](self._z)
         return self._a
 
     def backprop(self, grad, learning_rate):
-        delta = grad * ACTIVATIONS["sigmoid"]["grad"](self._z, self._a)
+        delta = grad * ACTIVATIONS["leakyrelu"]["grad"](self._z, self._a)
         n_grads = self.weights * delta 
 
-        self.weights -= delta * learning_rate
+        self.bias -= learning_rate * delta
+        self.weights -=  learning_rate  * delta * self._inputs
         return n_grads
 
 
@@ -84,7 +86,7 @@ class General:
         grads = 2 * error
 
         for layer in reversed(self.layers):
-            grads = layer.backprop(grads)
+            grads = layer.backprop(grads, learning_rate)
 
-        return error
+        return np.mean(error**2)
     
